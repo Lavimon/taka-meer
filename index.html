@@ -96,7 +96,7 @@ a{color:inherit;text-decoration:none}
 
 /* BOOTH CTA */
 .booth{background:linear-gradient(150deg,var(--blue) 0%,var(--blue-deep) 60%,var(--navy-2) 100%);color:#fff;position:relative;overflow:hidden;padding:68px 0;scroll-margin-top:64px}
-.booth::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.09) 1.4px,transparent 1.4px);background-size:26px 26px;opacity:.5;mask-image:radial-gradient(80% 90% at 80% 20%,#000,transparent 75%)}
+.booth::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.09) 1.4px,transparent 1.4px);background-size:26px 26px;opacity:.5;mask-image:radial-gradient(80% 90% at 80% 20%,#000,transparent 75%)}
 .booth-in{position:relative;display:grid;grid-template-columns:1fr .72fr;gap:48px;align-items:center}
 .booth-in>*{min-width:0}
 .booth .tag{font-family:var(--latin);font-size:.78rem;font-weight:700;letter-spacing:.22em;color:#cfe2f4;text-transform:uppercase}
@@ -113,16 +113,20 @@ a{color:inherit;text-decoration:none}
 .br-title{display:flex;align-items:center;justify-content:center;gap:9px;color:#fff;font-weight:800;font-size:1.35rem;letter-spacing:.02em;margin-bottom:20px}
 .br-title svg{flex:none}
 .booth-map{max-width:920px;margin:0 auto;background:#fff;border-radius:18px;padding:12px;box-shadow:0 26px 54px -26px rgba(0,0,0,.55)}
-.booth-map img{width:100%;height:auto;display:block;border-radius:10px}
-.map-btn{display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in;position:relative;border-radius:10px}
-.map-btn:focus-visible{outline:3px solid var(--blue-2);outline-offset:3px}
-.map-zoom{position:absolute;right:10px;bottom:10px;width:38px;height:38px;border-radius:10px;background:rgba(20,40,66,.85);color:#fff;display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 6px 14px -6px rgba(0,0,0,.5);transition:.2s}
-.map-btn:hover .map-zoom{background:var(--blue)}
-.lightbox{position:fixed;inset:0;z-index:100;background:rgba(8,18,30,.92);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
-.lightbox[hidden]{display:none}
-.lightbox img{max-width:100%;max-height:100%;width:auto;height:auto;border-radius:8px;background:#fff;box-shadow:0 24px 70px rgba(0,0,0,.6)}
-.lb-close{position:absolute;top:14px;right:16px;width:46px;height:46px;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:1.7rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
-.lb-close:hover{background:rgba(255,255,255,.3)}
+.map-tabs{display:flex;gap:8px;margin-bottom:10px}
+.map-tab{flex:1;padding:9px 8px;border:0.5px solid var(--line);background:#fff;border-radius:10px;font-weight:700;font-size:.9rem;color:var(--muted);cursor:pointer;transition:.15s;line-height:1.2}
+.map-tab:hover{border-color:var(--blue);color:var(--blue-deep)}
+.map-tab.is-active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.mapzoom{position:relative;overflow:hidden;border-radius:10px;background:#eef3f8;height:400px;touch-action:none;cursor:grab;user-select:none}
+.mapzoom.grabbing{cursor:grabbing}
+.mapzoom-pane{position:absolute;top:0;left:0;width:100%;transform-origin:0 0;will-change:transform}
+.mapzoom-pane img{width:100%;height:auto;display:block;pointer-events:none;-webkit-user-drag:none}
+.mapzoom-ctrl{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:7px;z-index:3}
+.mapzoom-ctrl button{width:40px;height:40px;border:0.5px solid var(--line);background:rgba(255,255,255,.96);border-radius:10px;font-size:1.5rem;line-height:1;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 12px -6px rgba(0,0,0,.45);transition:.15s}
+.mapzoom-ctrl button:hover{background:#fff;border-color:var(--blue)}
+.mapzoom-ctrl button:active{transform:scale(.94)}
+.mapzoom-hint{position:absolute;left:10px;bottom:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(18,38,62,.82);color:#fff;font-size:.8rem;font-weight:600;padding:6px 12px;border-radius:999px;pointer-events:none;z-index:3;transition:opacity .3s}
+.mapzoom.zoomed .mapzoom-hint{opacity:0}
 
 /* MEMBERS */
 .members{background:var(--bg-soft);padding:82px 0 92px}
@@ -175,6 +179,8 @@ a{color:inherit;text-decoration:none}
   .booth-route{margin-top:24px}
   .br-title{font-size:1.14rem;margin-bottom:10px}
   .booth-map{padding:8px;border-radius:14px}
+  .mapzoom{height:240px}
+  .map-tab{font-size:.84rem;padding:8px 6px}
   .hrow{gap:14px;padding:17px 2px}
   .hnum{font-size:1.9rem;min-width:40px}
   .hbody h3{font-size:1.12rem;gap:9px}
@@ -300,10 +306,20 @@ a{color:inherit;text-decoration:none}
         会場までの順路
       </div>
       <div class="booth-map">
-        <button class="map-btn" type="button" aria-label="順路マップを拡大表示" onclick="openMap()">
-          <img src="assets/campusmap.svg" alt="正門から電子制御工学科棟④までの順路マップ">
-          <span class="map-zoom" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></span>
-        </button>
+        <div class="map-tabs" role="tablist">
+          <button class="map-tab is-active" type="button" data-map="campus">① キャンパス</button>
+          <button class="map-tab" type="button" data-map="floor">② 館内（ブース前）</button>
+        </div>
+        <div class="mapzoom" id="mapzoom">
+          <div class="mapzoom-pane" id="mapzoomPane">
+            <img src="assets/campusmap.svg" alt="正門から電子制御工学科棟④までの順路マップ" draggable="false">
+          </div>
+          <div class="mapzoom-ctrl">
+            <button type="button" aria-label="地図を拡大" data-zoom="in">+</button>
+            <button type="button" aria-label="地図を縮小" data-zoom="out">−</button>
+          </div>
+          <span class="mapzoom-hint" aria-hidden="true">ピンチ・ドラッグで拡大</span>
+        </div>
       </div>
     </div>
   </div>
@@ -319,11 +335,6 @@ a{color:inherit;text-decoration:none}
   </div>
 </footer>
 
-<div class="lightbox" id="mapLightbox" hidden onclick="closeMap()">
-  <button class="lb-close" type="button" aria-label="閉じる" onclick="closeMap()">&times;</button>
-  <img src="assets/campusmap.svg" alt="正門から電子制御工学科棟④までの順路マップ（拡大）">
-</div>
-
 <script>
 (function(){
   var io=new IntersectionObserver(function(entries){
@@ -331,10 +342,30 @@ a{color:inherit;text-decoration:none}
   },{threshold:.16,rootMargin:'0px 0px -40px 0px'});
   document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
 
-  var lb=document.getElementById('mapLightbox');
-  window.openMap=function(){lb.hidden=false;document.body.style.overflow='hidden';};
-  window.closeMap=function(){lb.hidden=true;document.body.style.overflow='';};
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!lb.hidden){window.closeMap();} });
+  var vp=document.getElementById('mapzoom'), pane=document.getElementById('mapzoomPane');
+  if(vp&&pane){
+    var img=pane.querySelector('img');
+    var MAPS={campus:{src:'assets/campusmap.svg',ar:1344/1008,alt:'正門から電子制御工学科棟④までの順路マップ',init:1},floor:{src:'assets/floormap.png',ar:2304/4529,alt:'館内の順路マップ（ブース前）',init:2}};
+    var curAR=MAPS.campus.ar, scale=1, tx=0, ty=0, minS=1, maxS=6, rafId=null;
+    function fitW(){ return Math.min(vp.clientWidth, vp.clientHeight*curAR); }
+    function pdim(){ var pw=fitW()*scale; return {pw:pw, ph:pw/curAR}; }
+    function render(){ rafId=null; pane.style.width=(fitW()*scale)+'px'; pane.style.transform='translate('+tx+'px,'+ty+'px)'; vp.classList.toggle('zoomed', scale>1.02); }
+    function req(){ if(!rafId){ rafId=requestAnimationFrame(render); } }
+    function clamp(){ var W=vp.clientWidth,H=vp.clientHeight,d=pdim(); if(d.pw<=W){tx=(W-d.pw)/2;}else{tx=Math.min(0,Math.max(W-d.pw,tx));} if(d.ph<=H){ty=(H-d.ph)/2;}else{ty=Math.min(0,Math.max(H-d.ph,ty));} }
+    function zoomAt(cx,cy,ns){ ns=Math.max(minS,Math.min(maxS,ns)); var r=vp.getBoundingClientRect(),ox=cx-r.left,oy=cy-r.top,d=pdim(); var fx=d.pw?(ox-tx)/d.pw:0, fy=d.ph?(oy-ty)/d.ph:0; scale=ns; var npw=fitW()*scale, nph=npw/curAR; tx=ox-fx*npw; ty=oy-fy*nph; clamp(); req(); }
+    function setMap(m){ if(!MAPS[m])return; img.src=MAPS[m].src; img.alt=MAPS[m].alt; curAR=MAPS[m].ar; scale=MAPS[m].init||1; var W=vp.clientWidth,H=vp.clientHeight,pw=fitW()*scale; tx=(W-pw)/2; ty=(H-pw/curAR)/2; clamp(); render(); }
+    document.querySelectorAll('.map-tab').forEach(function(b){ b.addEventListener('click',function(){ document.querySelectorAll('.map-tab').forEach(function(x){ x.classList.toggle('is-active', x===b); }); setMap(b.getAttribute('data-map')); }); });
+    vp.querySelectorAll('[data-zoom]').forEach(function(b){ b.addEventListener('click',function(e){ e.preventDefault(); var r=vp.getBoundingClientRect(); zoomAt(r.left+r.width/2, r.top+r.height/2, scale*(b.getAttribute('data-zoom')==='in'?1.7:1/1.7)); }); });
+    vp.addEventListener('dblclick',function(e){ e.preventDefault(); zoomAt(e.clientX,e.clientY, scale>1?minS:2.5); });
+    var pts=new Map(), pinchStart=0, scaleStart=1;
+    function d2(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+    vp.addEventListener('pointerdown',function(e){ if(e.target.closest('[data-zoom]'))return; vp.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(pts.size===2){var a=Array.from(pts.values());pinchStart=d2(a[0],a[1]);scaleStart=scale;} vp.classList.add('grabbing'); });
+    vp.addEventListener('pointermove',function(e){ if(!pts.has(e.pointerId))return; var prev=pts.get(e.pointerId), cur={x:e.clientX,y:e.clientY}; pts.set(e.pointerId,cur); var arr=Array.from(pts.values()); if(arr.length>=2){ var d=d2(arr[0],arr[1]); if(pinchStart){ zoomAt((arr[0].x+arr[1].x)/2,(arr[0].y+arr[1].y)/2, scaleStart*(d/pinchStart)); } } else { var dx=cur.x-prev.x, dy=cur.y-prev.y, W=vp.clientWidth,H=vp.clientHeight,s=pdim(); if(s.pw>W+1||s.ph>H+1){ tx+=dx; ty+=dy; clamp(); req(); } else { window.scrollBy(0,-dy); } } });
+    function up(e){ pts.delete(e.pointerId); if(pts.size<2)pinchStart=0; if(pts.size===0)vp.classList.remove('grabbing'); }
+    vp.addEventListener('pointerup',up); vp.addEventListener('pointercancel',up);
+    window.addEventListener('resize',function(){ clamp(); req(); });
+    clamp(); render();
+  }
 })();
 </script>
 </body>
