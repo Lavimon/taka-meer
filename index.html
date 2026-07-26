@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{
   --blue:#4371A3;
@@ -101,7 +102,7 @@ a{color:inherit;text-decoration:none}
 .booth-in>*{min-width:0}
 .booth .tag{font-family:var(--latin);font-size:.78rem;font-weight:700;letter-spacing:.22em;color:#cfe2f4;text-transform:uppercase}
 .booth h2{font-size:clamp(2rem,5vw,3.1rem);font-weight:900;margin:14px 0 16px;letter-spacing:.02em}
-.booth p{color:#dceaf6;font-size:1.1rem;max-width:38ch}
+.booth-in p{color:#dceaf6;font-size:1.1rem;max-width:38ch}
 .booth .invite{margin-top:28px;display:block;width:100%;background:#fff;color:var(--blue-deep);border-radius:12px;padding:15px 0;font-weight:800;font-size:1.08rem;letter-spacing:.01em;box-shadow:0 16px 32px -20px rgba(0,0,0,.55);overflow:hidden;white-space:nowrap}
 .led-track{display:inline-flex;white-space:nowrap;animation:ledScroll 12s linear infinite}
 .led-item{flex:none;padding:0 2.4rem}
@@ -127,6 +128,36 @@ a{color:inherit;text-decoration:none}
 .mapzoom-ctrl button:active{transform:scale(.94)}
 .mapzoom-hint{position:absolute;left:10px;bottom:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(18,38,62,.82);color:#fff;font-size:.8rem;font-weight:600;padding:6px 12px;border-radius:999px;pointer-events:none;z-index:3;transition:opacity .3s}
 .mapzoom.zoomed .mapzoom-hint{opacity:0}
+
+/* LIVE NAV */
+.livenav{max-width:640px;margin:34px auto 0;background:#fff;border-radius:18px;padding:26px 24px;box-shadow:0 26px 54px -26px rgba(0,0,0,.55);text-align:center}
+.livenav-dest{color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:18px}
+.livenav-dest .ln-name{color:var(--ink);font-weight:800;font-size:.98rem}
+.livenav-map{width:100%;height:0;overflow:hidden;border-radius:12px;margin-bottom:0;border:1px solid var(--line);transition:height .25s ease,margin .25s ease;background:var(--bg-soft)}
+.livenav-map.show{height:300px;margin-bottom:16px}
+.livenav-info{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.livenav-info[hidden]{display:none}
+.livenav-metric{background:var(--bg-soft);border-radius:10px;padding:10px 6px}
+.livenav-metric .lbl{display:block;font-size:.7rem;color:var(--muted);margin-bottom:3px;letter-spacing:.04em}
+.livenav-metric .val{display:block;font-weight:800;font-size:1.08rem;color:var(--blue-deep)}
+.livenav-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;background:var(--blue);color:#fff;font-weight:700;font-size:1rem;padding:14px 0;border:0;border-radius:12px;cursor:pointer;transition:.2s}
+.livenav-btn:hover{background:var(--blue-deep);transform:translateY(-2px)}
+.livenav-btn:disabled{opacity:.6;cursor:default;transform:none}
+.livenav-btn.tracking{background:#c0392b}
+.livenav-btn.tracking:hover{background:#a5311f}
+.livenav-status{margin-top:14px;font-size:.86rem;color:var(--muted);min-height:1.3em}
+.livenav-status.error{color:#c0392b}
+.livenav-status.warn{color:#b9770e}
+.livenav-compass{width:92px;height:92px;margin:0 auto 16px}
+.livenav-compass[hidden]{display:none}
+.livenav-compass svg{width:100%;height:100%}
+.livenav-compass .cc-ring{fill:#fff;stroke:var(--line);stroke-width:2}
+.livenav-compass .cc-n{font-family:var(--latin);font-size:9px;fill:var(--muted);font-weight:700}
+.livenav-compass .cc-arrow{fill:var(--blue);transition:transform .35s ease}
+.livenav-indoor{display:none;background:var(--bg-soft);border-radius:12px;padding:22px 18px;margin-bottom:16px;text-align:center}
+.livenav-indoor.show{display:block}
+.livenav-indoor h4{font-size:1rem;font-weight:800;margin-bottom:6px;color:var(--ink)}
+.livenav-indoor p{font-size:.86rem;color:var(--muted);line-height:1.65}
 
 /* MEMBERS */
 .members{background:var(--bg-soft);padding:82px 0 92px}
@@ -163,7 +194,7 @@ a{color:inherit;text-decoration:none}
   .booth{padding:46px 0}
   .booth-in{grid-template-columns:1fr;text-align:center;gap:20px}
   .booth h2{font-size:1.7rem;margin:10px 0 12px}
-  .booth p{margin:0 auto;font-size:1rem}
+  .booth-in p{margin:0 auto;font-size:1rem}
   .booth-mark{order:-1}
 }
 @media(max-width:520px){
@@ -321,6 +352,38 @@ a{color:inherit;text-decoration:none}
           <span class="mapzoom-hint" aria-hidden="true">ピンチ・ドラッグで拡大</span>
         </div>
       </div>
+      <div class="livenav">
+        <p class="livenav-dest"><span class="ln-name">電子制御工学科棟④ 1F　情報処理演習室</span><br>〒410-8501 静岡県沼津市大岡3600（沼津工業高等専門学校内）</p>
+        <div class="livenav-map" id="liveMap"></div>
+        <div class="livenav-compass" id="navCompass" hidden>
+          <svg viewBox="0 0 100 100">
+            <g id="navDialGroup" style="transform-origin:50px 50px; transition: transform 0.35s ease">
+              <circle class="cc-ring" cx="50" cy="50" r="46"/>
+              <text class="cc-n" x="50" y="15" text-anchor="middle">N</text>
+              <text class="cc-n" x="85" y="53" text-anchor="middle">E</text>
+              <text class="cc-n" x="50" y="91" text-anchor="middle">S</text>
+              <text class="cc-n" x="15" y="53" text-anchor="middle">W</text>
+            </g>
+            <g id="navArrowGroup" style="transform-origin:50px 50px; transition: transform 0.35s ease">
+              <polygon class="cc-arrow" points="50,22 58,56 50,48 42,56"/>
+            </g>
+          </svg>
+        </div>
+        <div class="livenav-indoor" id="navIndoor">
+          <h4>目的地付近に到着しました</h4>
+          <p>ここからは建物内の案内板・スタッフの案内にしたがってお進みください。<br>電子制御工学科棟④ ブース会場まで、あと少しです。</p>
+        </div>
+        <div class="livenav-info" id="navInfo" hidden>
+          <div class="livenav-metric"><span class="lbl">距離</span><span class="val" id="navDist">--</span></div>
+          <div class="livenav-metric"><span class="lbl">方角</span><span class="val" id="navDir">--</span></div>
+          <div class="livenav-metric"><span class="lbl">精度</span><span class="val" id="navAcc">--</span></div>
+        </div>
+        <button class="livenav-btn" id="navBtn" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          <span id="navBtnLabel">現在地から案内を開始</span>
+        </button>
+        <p class="livenav-status" id="navStatus"></p>
+      </div>
     </div>
   </div>
 </section>
@@ -366,6 +429,251 @@ a{color:inherit;text-decoration:none}
     window.addEventListener('resize',function(){ clamp(); req(); });
     clamp(); render();
   }
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  // LIVE NAV: サイト内に埋め込んだ地図上で、現在地から目的地までの距離・方角をリアルタイム表示する
+  var DEST={ lat:35.135725, lng:138.884397, label:'電子制御工学科棟④ 情報処理演習室' };
+
+  var navBtn=document.getElementById('navBtn');
+  var navBtnLabel=document.getElementById('navBtnLabel');
+  var navStatus=document.getElementById('navStatus');
+  var navInfo=document.getElementById('navInfo');
+  var navDist=document.getElementById('navDist');
+  var navDir=document.getElementById('navDir');
+  var navAcc=document.getElementById('navAcc');
+  var mapEl=document.getElementById('liveMap');
+  var navCompass=document.getElementById('navCompass');
+  var navArrowGroup=document.getElementById('navArrowGroup');
+  var navDialGroup=document.getElementById('navDialGroup');
+  var navIndoor=document.getElementById('navIndoor');
+  if(!navBtn) return;
+
+  var ARRIVE_RADIUS=30; // この距離(m)以内に入ったら館内案内表示に切り替える
+
+  var map=null, userMarker=null, accCircle=null, destMarker=null, routeLine=null;
+  var watchId=null, tracking=false, arrived=false;
+  var smoothed=null;        // 平滑化された現在地（平均化フィルタ後）
+  var currentBearing=null;  // 目的地への最新の方位角
+  var deviceHeading=null;   // 端末が向いている方角（コンパス）
+  var orientationBound=false;
+
+  function toRad(d){ return d*Math.PI/180; }
+  function toDeg(r){ return r*180/Math.PI; }
+
+  // 2点間の距離（メートル）を球面三角法（Haversine公式）で正確に計算
+  function distanceMeters(lat1,lon1,lat2,lon2){
+    var R=6371000;
+    var dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)
+      +Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+
+  // 目的地への方位角（真北基準・0-360度）
+  function bearingDeg(lat1,lon1,lat2,lon2){
+    var y=Math.sin(toRad(lon2-lon1))*Math.cos(toRad(lat2));
+    var x=Math.cos(toRad(lat1))*Math.sin(toRad(lat2))
+      -Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(toRad(lon2-lon1));
+    return (toDeg(Math.atan2(y,x))+360)%360;
+  }
+
+  function compassLabel(deg){
+    var dirs=['北','北北東','北東','東北東','東','東南東','南東','南南東','南','南南西','南西','西南西','西','西北西','北西','北北西'];
+    return dirs[Math.round(deg/22.5)%16];
+  }
+
+  function setNavStatus(msg,tone){
+    navStatus.textContent=msg;
+    navStatus.classList.toggle('error',tone==='error');
+    navStatus.classList.toggle('warn',tone==='warn');
+  }
+
+  function ensureMap(){
+    if(map||!window.L) return;
+    mapEl.classList.add('show');
+    map=L.map(mapEl,{zoomControl:true,attributionControl:true});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      maxZoom:19,
+      attribution:'&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    destMarker=L.marker([DEST.lat,DEST.lng],{draggable:false}).addTo(map).bindPopup(DEST.label);
+    map.setView([DEST.lat,DEST.lng],17);
+    setTimeout(function(){ map.invalidateSize(); },300);
+  }
+
+  // ① 測位の平滑化：精度が良い（誤差が小さい）測位ほど重みを大きくした
+  // 指数移動平均で座標をなだらかにし、屋内などでの値のジャンプ・ブレを抑える
+  function smoothFix(lat,lng,acc){
+    var weight=Math.min(0.9, Math.max(0.08, 15/(acc||15)));
+    if(!smoothed){
+      smoothed={ lat:lat, lng:lng };
+    }else{
+      smoothed.lat += weight*(lat-smoothed.lat);
+      smoothed.lng += weight*(lng-smoothed.lng);
+    }
+    return smoothed;
+  }
+
+  // ② コンパス（ロジック分離）
+  //   盤面(N/E/S/W)：端末の向きが取れ次第、GPS未取得でも北に合わせて回す
+  function updateDial(){
+    if(deviceHeading==null || !navDialGroup) return;
+    navDialGroup.style.transform='rotate('+(-deviceHeading).toFixed(1)+'deg)';
+  }
+  //   矢印：目的地の方位（GPS取得後）と端末の向きが揃ってから目的地へ向ける
+  function updateArrow(){
+    if(currentBearing==null || deviceHeading==null || !navArrowGroup) return;
+    var rel=(currentBearing - deviceHeading + 360)%360;
+    navArrowGroup.style.transform='rotate('+rel.toFixed(1)+'deg)';
+  }
+  function updateArrowRotation(){ updateDial(); updateArrow(); }
+
+  var hasAbsolute = false;
+  function onOrientation(e){
+    var heading=null;
+    if(typeof e.webkitCompassHeading==='number'){
+      heading=e.webkitCompassHeading; // iOS Safari
+    }else if(e.type === 'deviceorientationabsolute' || e.absolute){
+      hasAbsolute = true;
+      if(e.alpha!=null) heading=360-e.alpha; // Android Chrome absolute
+    }else if(!hasAbsolute && e.alpha!=null){
+      heading=360-e.alpha; // Fallback
+    }
+    if(heading==null || isNaN(heading)) return;
+    deviceHeading=heading;
+    updateArrowRotation();
+  }
+
+  function enableCompass(){
+    if(orientationBound) return;
+    var DOE=window.DeviceOrientationEvent;
+    function bind(){
+      window.addEventListener('deviceorientationabsolute',onOrientation,true);
+      window.addEventListener('deviceorientation',onOrientation,true);
+      orientationBound=true;
+      navCompass.hidden=false;
+    }
+    if(DOE && typeof DOE.requestPermission==='function'){
+      // iOS 13+ はユーザー操作（ボタンクリック）内で許可を求める必要がある
+      DOE.requestPermission().then(function(state){
+        if(state==='granted') bind();
+      }).catch(function(){ /* 許可されない場合はコンパスなしで続行 */ });
+    }else if(DOE){
+      bind();
+    }
+  }
+
+  // 精度の低い（誤差の大きい）測位結果は破棄せず表示しつつ警告し、
+  // より精度の良い測位（GPS収束後の値）に自然に上書きされるようにする
+  function onFix(pos){
+    var rawLat=pos.coords.latitude, rawLng=pos.coords.longitude, acc=pos.coords.accuracy;
+    var s=smoothFix(rawLat,rawLng,acc);
+    var lat=s.lat, lng=s.lng;
+
+    ensureMap();
+    if(!map) return;
+
+    if(!userMarker){
+      userMarker=L.circleMarker([lat,lng],{radius:8,color:'#fff',weight:2,fillColor:'#4371A3',fillOpacity:1}).addTo(map);
+    }else{
+      userMarker.setLatLng([lat,lng]);
+    }
+
+    if(!accCircle){
+      accCircle=L.circle([lat,lng],{radius:acc,color:'#4371A3',weight:1,fillColor:'#4371A3',fillOpacity:.12}).addTo(map);
+    }else{
+      accCircle.setLatLng([lat,lng]);
+      accCircle.setRadius(acc);
+    }
+
+    if(routeLine){ map.removeLayer(routeLine); }
+    routeLine=L.polyline([[lat,lng],[DEST.lat,DEST.lng]],{color:'#2f5a86',weight:3,dashArray:'6 8'}).addTo(map);
+    map.fitBounds(L.latLngBounds([[lat,lng],[DEST.lat,DEST.lng]]),{padding:[36,36],maxZoom:18});
+
+    var dist=distanceMeters(lat,lng,DEST.lat,DEST.lng);
+    currentBearing=bearingDeg(lat,lng,DEST.lat,DEST.lng);
+    updateArrowRotation();
+
+    navInfo.hidden=false;
+    navDist.textContent = dist<1000 ? Math.round(dist)+' m' : (dist/1000).toFixed(2)+' km';
+    navDir.textContent = compassLabel(currentBearing);
+    navAcc.textContent = '±'+Math.round(acc)+' m';
+
+    // ③ 目的地付近に到達したら、GPSに頼らない館内案内表示へ自動切替
+    if(dist<=ARRIVE_RADIUS){
+      if(!arrived){
+        arrived=true;
+        navIndoor.classList.add('show');
+        navCompass.hidden=true;
+      }
+      setNavStatus('目的地付近に到着しました。');
+      return;
+    }else if(arrived){
+      arrived=false;
+      navIndoor.classList.remove('show');
+      if(orientationBound) navCompass.hidden=false;
+    }
+
+    if(acc>100){
+      setNavStatus('GPS精度が低下しています（誤差±'+Math.round(acc)+'m）。屋外の開けた場所では精度が上がります。','warn');
+    }else{
+      setNavStatus('現在地を更新しています（誤差±'+Math.round(acc)+'m）。');
+    }
+  }
+
+  function onError(err){
+    var msg='位置情報の取得に失敗しました。';
+    if(err.code===err.PERMISSION_DENIED){
+      msg='位置情報の利用が許可されていません。ブラウザの設定をご確認ください。';
+    }else if(err.code===err.POSITION_UNAVAILABLE){
+      msg='現在地を特定できませんでした。電波状況の良い場所でお試しください。';
+    }else if(err.code===err.TIMEOUT){
+      msg='位置情報の取得がタイムアウトしました。もう一度お試しください。';
+    }
+    setNavStatus(msg,'error');
+    stopTracking();
+  }
+
+  function startTracking(){
+    if(!('geolocation' in navigator)){
+      setNavStatus('このブラウザは位置情報の取得に対応していません。','error');
+      return;
+    }
+    tracking=true;
+    smoothed=null;
+    arrived=false;
+    navIndoor.classList.remove('show');
+    navBtn.classList.add('tracking');
+    navBtnLabel.textContent='案内を終了';
+    setNavStatus('現在地を取得しています…（精度向上のため数秒お待ちください）');
+    enableCompass();
+    // 高精度モード＋継続測位で、GPSが収束するほど精度が上がるようにする
+    watchId=navigator.geolocation.watchPosition(onFix,onError,{
+      enableHighAccuracy:true,
+      maximumAge:0,
+      timeout:15000
+    });
+  }
+
+  function stopTracking(){
+    if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+    tracking=false;
+    navBtn.classList.remove('tracking');
+    navBtnLabel.textContent='現在地から案内を開始';
+    navCompass.hidden=true;
+  }
+
+  navBtn.addEventListener('click',function(){
+    if(tracking){
+      stopTracking();
+      setNavStatus('案内を終了しました。');
+    }else{
+      startTracking();
+    }
+  });
 })();
 </script>
 </body>
